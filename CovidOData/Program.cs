@@ -1,19 +1,56 @@
+//using CovidOData.Models;
+//using Microsoft.AspNetCore.OData;
+//using Microsoft.OData.ModelBuilder;
+
+//var builder = WebApplication.CreateBuilder(args);
+
+//// Load data once at startup
+//var covidData = await CovidDataLoader.LoadDataAsync();
+//builder.Services.AddSingleton(covidData);
+
+//// OData model
+//var odataBuilder = new ODataConventionModelBuilder();
+//odataBuilder.EntitySet<CovidRecord>("CovidData").EntityType.HasKey(c => c.Id);
+
+//builder.Services.AddControllers().AddOData(opt =>
+//    opt.Filter().Select().OrderBy().Expand().Count().SetMaxTop(100)
+//       .AddRouteComponents("odata", odataBuilder.GetEdmModel()));
+
+//builder.Services.AddEndpointsApiExplorer();
+//builder.Services.AddSwaggerGen();
+
+//var app = builder.Build();
+
+//app.UseSwagger();
+//app.UseSwaggerUI();
+
+//app.MapControllers();
+//app.Run();
+
+// Program.cs
+using CovidOData.Data;
+using CovidOData.Models;
 using Microsoft.AspNetCore.OData;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OData.ModelBuilder;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load data once at startup
-var covidData = await CovidDataLoader.LoadDataAsync();
-builder.Services.AddSingleton(covidData);
+var connStr = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// OData model
+// Configure the DbContext for PostgreSQL
+builder.Services.AddDbContext<AppDbContext>(opt =>
+	opt.UseNpgsql(connStr, o => o.CommandTimeout(180))
+);
+
+// Build the OData model
 var odataBuilder = new ODataConventionModelBuilder();
-odataBuilder.EntitySet<CovidRecord>("CovidData").EntityType.HasKey(c => c.Id);
+odataBuilder.EntitySet<CovidRecord>("CovidRecord");
 
+// Add OData services and enable query options
 builder.Services.AddControllers().AddOData(opt =>
-    opt.Filter().Select().OrderBy().Expand().Count().SetMaxTop(100)
-       .AddRouteComponents("odata", odataBuilder.GetEdmModel()));
+	opt.Filter().Select().OrderBy().Expand().Count().SetMaxTop(1000)
+	   .AddRouteComponents("odata", odataBuilder.GetEdmModel()));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -23,5 +60,13 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseAuthorization();
+
+// This maps the OData controller routes
 app.MapControllers();
+
 app.Run();

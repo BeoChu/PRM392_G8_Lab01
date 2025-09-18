@@ -1,11 +1,27 @@
-﻿public class CovidRecord
+﻿using Supabase.Postgrest.Attributes;
+using System.ComponentModel.DataAnnotations;
+
+namespace CovidOData.Models
 {
-    public int Id { get; set; }
-    public string Country { get; set; }
-    public string Province { get; set; }
-    public int Confirmed { get; set; }
-    public int Deaths { get; set; }
-    public int Recovered { get; set; }
-    public int Active { get; set; }
-    public DateTime Date { get; set; }
+	[Table("daily_us_reports")]
+	public class CovidRecord
+	{
+		[Key]
+		[Column("id")]
+		public int Id { get; set; }
+		[Column("country")]
+		public string Country { get; set; } = string.Empty;
+		[Column("province")]
+		public string Province { get; set; } = string.Empty;
+		[Column("confirmed")]
+		public double Confirmed { get; set; }
+		[Column("deaths")]
+		public double Deaths { get; set; }
+		[Column("recovered")]
+		public double? Recovered { get; set; }
+		[Column("active")]
+		public double? Active { get; set; }
+		[Column("date")]
+		public DateTime Date { get; set; }
+	}
 }
